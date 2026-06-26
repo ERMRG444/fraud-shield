@@ -1,0 +1,8 @@
+.env
+__pycache__/
+*.pyc
+data/audit_log.jsonl
+uploads/
+.venv/
+.vscode/
+.idea/

@@ -1,0 +1,127 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 550px;
+                 background-color: #0b0f19;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"borderWidth": 2, "color": "#F97316", "font": {"color": "#e2e8f0"}, "id": "203", "label": "Acc: 203", "shape": "dot", "size": 28, "title": "\n        \u003cb\u003eAccount ID:\u003c/b\u003e 203\u003cbr/\u003e\n        \u003cb\u003eRisk Level:\u003c/b\u003e HIGH RISK (60.0%)\u003cbr/\u003e\n        \u003cb\u003eIn-Volume:\u003c/b\u003e Rs 250,000.0\u003cbr/\u003e\n        \u003cb\u003eOut-Volume:\u003c/b\u003e Rs 249,000.0\u003cbr/\u003e\n        \u003cb\u003eConnections:\u003c/b\u003e In: 1, Out: 1\u003cbr/\u003e\n        \u003cb\u003eFlagged Reasons:\u003c/b\u003e Mule Activity (Rapid funds cycling), High Liquidity Draining (Mule profile)\n        "}, {"borderWidth": 2, "color": "#F97316", "font": {"color": "#e2e8f0"}, "id": "888", "label": "Acc: 888", "shape": "dot", "size": 28, "title": "\n        \u003cb\u003eAccount ID:\u003c/b\u003e 888\u003cbr/\u003e\n        \u003cb\u003eRisk Level:\u003c/b\u003e HIGH RISK (55.0%)\u003cbr/\u003e\n        \u003cb\u003eIn-Volume:\u003c/b\u003e Rs 79,000.0\u003cbr/\u003e\n        \u003cb\u003eOut-Volume:\u003c/b\u003e Rs 0.0\u003cbr/\u003e\n        \u003cb\u003eConnections:\u003c/b\u003e In: 5, Out: 0\u003cbr/\u003e\n        \u003cb\u003eFlagged Reasons:\u003c/b\u003e Hub Account (5 incoming victims), Temporal Transaction Burst\n        "}, {"borderWidth": 2, "color": "#F97316", "font": {"color": "#e2e8f0"}, "id": "201", "label": "Acc: 201", "shape": "dot", "size": 28, "title": "\n        \u003cb\u003eAccount ID:\u003c/b\u003e 201\u003cbr/\u003e\n        \u003cb\u003eRisk Level:\u003c/b\u003e HIGH RISK (45.0%)\u003cbr/\u003e\n        \u003cb\u003eIn-Volume:\u003c/b\u003e Rs 80,000.0\u003cbr/\u003e\n        \u003cb\u003eOut-Volume:\u003c/b\u003e Rs 79,000.0\u003cbr/\u003e\n        \u003cb\u003eConnections:\u003c/b\u003e In: 1, Out: 1\u003cbr/\u003e\n        \u003cb\u003eFlagged Reasons:\u003c/b\u003e Mule Activity (Rapid funds cycling)\n        "}, {"borderWidth": 2, "color": "#F97316", "font": {"color": "#e2e8f0"}, "id": "202", "label": "Acc: 202", "shape": "dot", "size": 28, "title": "\n        \u003cb\u003eAccount ID:\u003c/b\u003e 202\u003cbr/\u003e\n        \u003cb\u003eRisk Level:\u003c/b\u003e HIGH RISK (45.0%)\u003cbr/\u003e\n        \u003cb\u003eIn-Volume:\u003c/b\u003e Rs 50,000.0\u003cbr/\u003e\n        \u003cb\u003eOut-Volume:\u003c/b\u003e Rs 49,500.0\u003cbr/\u003e\n        \u003cb\u003eConnections:\u003c/b\u003e In: 1, Out: 1\u003cbr/\u003e\n        \u003cb\u003eFlagged Reasons:\u003c/b\u003e Mule Activity (Rapid funds cycling)\n        "}, {"borderWidth": 2, "color": "#F97316", "font": {"color": "#e2e8f0"}, "id": "305", "label": "Acc: 305", "shape": "dot", "size": 28, "title": "\n        \u003cb\u003eAccount ID:\u003c/b\u003e 305\u003cbr/\u003e\n        \u003cb\u003eRisk Level:\u003c/b\u003e HIGH RISK (45.0%)\u003cbr/\u003e\n        \u003cb\u003eIn-Volume:\u003c/b\u003e Rs 2,500.0\u003cbr/\u003e\n        \u003cb\u003eOut-Volume:\u003c/b\u003e Rs 1,200.0\u003cbr/\u003e\n        \u003cb\u003eConnections:\u003c/b\u003e In: 1, Out: 1\u003cbr/\u003e\n        \u003cb\u003eFlagged Reasons:\u003c/b\u003e Mule Activity (Rapid funds cycling)\n        "}, {"borderWidth": 2, "color": "#3B82F6", "font": {"color": "#e2e8f0"}, "id": "500", "label": "Acc: 500", "shape": "dot", "size": 30, "title": "\n        \u003cb\u003eAccount ID:\u003c/b\u003e 500\u003cbr/\u003e\n        \u003cb\u003eRisk Level:\u003c/b\u003e SUSPICIOUS (35.0%)\u003cbr/\u003e\n        \u003cb\u003eIn-Volume:\u003c/b\u003e Rs 262,000.0\u003cbr/\u003e\n        \u003cb\u003eOut-Volume:\u003c/b\u003e Rs 0.0\u003cbr/\u003e\n        \u003cb\u003eConnections:\u003c/b\u003e In: 4, Out: 0\u003cbr/\u003e\n        \u003cb\u003eFlagged Reasons:\u003c/b\u003e Hub Account (4 incoming victims)\n        "}, {"borderWidth": 2, "color": "#3B82F6", "font": {"color": "#e2e8f0"}, "id": "900", "label": "Acc: 900", "shape": "dot", "size": 27, "title": "\n        \u003cb\u003eAccount ID:\u003c/b\u003e 900\u003cbr/\u003e\n        \u003cb\u003eRisk Level:\u003c/b\u003e SUSPICIOUS (15.0%)\u003cbr/\u003e\n        \u003cb\u003eIn-Volume:\u003c/b\u003e Rs 377,500.0\u003cbr/\u003e\n        \u003cb\u003eOut-Volume:\u003c/b\u003e Rs 0.0\u003cbr/\u003e\n        \u003cb\u003eConnections:\u003c/b\u003e In: 3, Out: 0\u003cbr/\u003e\n        \u003cb\u003eFlagged Reasons:\u003c/b\u003e Incoming Hub tendency\n        "}, {"borderWidth": 2, "color": "#3B82F6", "font": {"color": "#e2e8f0"}, "id": "101", "label": "Acc: 101", "shape": "dot", "size": 18, "title": "\n        \u003cb\u003eAccount ID:\u003c/b\u003e 101\u003cbr/\u003e\n        \u003cb\u003eRisk Level:\u003c/b\u003e LOW RISK (0.0%)\u003cbr/\u003e\n        \u003cb\u003eIn-Volume:\u003c/b\u003e Rs 0.0\u003cbr/\u003e\n        \u003cb\u003eOut-Volume:\u003c/b\u003e Rs 45,000.0\u003cbr/\u003e\n        \u003cb\u003eConnections:\u003c/b\u003e In: 0, Out: 1\u003cbr/\u003e\n        \u003cb\u003eFlagged Reasons:\u003c/b\u003e Normal account activities\n        "}, {"borderWidth": 2, "color": "#3B82F6", "font": {"color": "#e2e8f0"}, "id": "104", "label": "Acc: 104", "shape": "dot", "size": 18, "title": "\n        \u003cb\u003eAccount ID:\u003c/b\u003e 104\u003cbr/\u003e\n        \u003cb\u003eRisk Level:\u003c/b\u003e LOW RISK (0.0%)\u003cbr/\u003e\n        \u003cb\u003eIn-Volume:\u003c/b\u003e Rs 0.0\u003cbr/\u003e\n        \u003cb\u003eOut-Volume:\u003c/b\u003e Rs 30,000.0\u003cbr/\u003e\n        \u003cb\u003eConnections:\u003c/b\u003e In: 0, Out: 1\u003cbr/\u003e\n        \u003cb\u003eFlagged Reasons:\u003c/b\u003e Normal account activities\n        "}, {"borderWidth": 2, "color": "#3B82F6", "font": {"color": "#e2e8f0"}, "id": "105", "label": "Acc: 105", "shape": "dot", "size": 18, "title": "\n        \u003cb\u003eAccount ID:\u003c/b\u003e 105\u003cbr/\u003e\n        \u003cb\u003eRisk Level:\u003c/b\u003e LOW RISK (0.0%)\u003cbr/\u003e\n        \u003cb\u003eIn-Volume:\u003c/b\u003e Rs 0.0\u003cbr/\u003e\n        \u003cb\u003eOut-Volume:\u003c/b\u003e Rs 80,000.0\u003cbr/\u003e\n        \u003cb\u003eConnections:\u003c/b\u003e In: 0, Out: 1\u003cbr/\u003e\n        \u003cb\u003eFlagged Reasons:\u003c/b\u003e Normal account activities\n        "}, {"borderWidth": 2, "color": "#3B82F6", "font": {"color": "#e2e8f0"}, "id": "102", "label": "Acc: 102", "shape": "dot", "size": 18, "title": "\n        \u003cb\u003eAccount ID:\u003c/b\u003e 102\u003cbr/\u003e\n        \u003cb\u003eRisk Level:\u003c/b\u003e LOW RISK (0.0%)\u003cbr/\u003e\n        \u003cb\u003eIn-Volume:\u003c/b\u003e Rs 0.0\u003cbr/\u003e\n        \u003cb\u003eOut-Volume:\u003c/b\u003e Rs 62,000.0\u003cbr/\u003e\n        \u003cb\u003eConnections:\u003c/b\u003e In: 0, Out: 1\u003cbr/\u003e\n        \u003cb\u003eFlagged Reasons:\u003c/b\u003e Normal account activities\n        "}, {"borderWidth": 2, "color": "#3B82F6", "font": {"color": "#e2e8f0"}, "id": "103", "label": "Acc: 103", "shape": "dot", "size": 18, "title": "\n        \u003cb\u003eAccount ID:\u003c/b\u003e 103\u003cbr/\u003e\n        \u003cb\u003eRisk Level:\u003c/b\u003e LOW RISK (0.0%)\u003cbr/\u003e\n        \u003cb\u003eIn-Volume:\u003c/b\u003e Rs 0.0\u003cbr/\u003e\n        \u003cb\u003eOut-Volume:\u003c/b\u003e Rs 125,000.0\u003cbr/\u003e\n        \u003cb\u003eConnections:\u003c/b\u003e In: 0, Out: 1\u003cbr/\u003e\n        \u003cb\u003eFlagged Reasons:\u003c/b\u003e Normal account activities\n        "}, {"borderWidth": 2, "color": "#3B82F6", "font": {"color": "#e2e8f0"}, "id": "107", "label": "Acc: 107", "shape": "dot", "size": 18, "title": "\n        \u003cb\u003eAccount ID:\u003c/b\u003e 107\u003cbr/\u003e\n        \u003cb\u003eRisk Level:\u003c/b\u003e LOW RISK (0.0%)\u003cbr/\u003e\n        \u003cb\u003eIn-Volume:\u003c/b\u003e Rs 0.0\u003cbr/\u003e\n        \u003cb\u003eOut-Volume:\u003c/b\u003e Rs 250,000.0\u003cbr/\u003e\n        \u003cb\u003eConnections:\u003c/b\u003e In: 0, Out: 1\u003cbr/\u003e\n        \u003cb\u003eFlagged Reasons:\u003c/b\u003e Normal account activities\n        "}, {"borderWidth": 2, "color": "#3B82F6", "font": {"color": "#e2e8f0"}, "id": "108", "label": "Acc: 108", "shape": "dot", "size": 18, "title": "\n        \u003cb\u003eAccount ID:\u003c/b\u003e 108\u003cbr/\u003e\n        \u003cb\u003eRisk Level:\u003c/b\u003e LOW RISK (0.0%)\u003cbr/\u003e\n        \u003cb\u003eIn-Volume:\u003c/b\u003e Rs 0.0\u003cbr/\u003e\n        \u003cb\u003eOut-Volume:\u003c/b\u003e Rs 15,000.0\u003cbr/\u003e\n        \u003cb\u003eConnections:\u003c/b\u003e In: 0, Out: 1\u003cbr/\u003e\n        \u003cb\u003eFlagged Reasons:\u003c/b\u003e Normal account activities\n        "}, {"borderWidth": 2, "color": "#3B82F6", "font": {"color": "#e2e8f0"}, "id": "109", "label": "Acc: 109", "shape": "dot", "size": 18, "title": "\n        \u003cb\u003eAccount ID:\u003c/b\u003e 109\u003cbr/\u003e\n        \u003cb\u003eRisk Level:\u003c/b\u003e LOW RISK (0.0%)\u003cbr/\u003e\n        \u003cb\u003eIn-Volume:\u003c/b\u003e Rs 0.0\u003cbr/\u003e\n        \u003cb\u003eOut-Volume:\u003c/b\u003e Rs 12,000.0\u003cbr/\u003e\n        \u003cb\u003eConnections:\u003c/b\u003e In: 0, Out: 1\u003cbr/\u003e\n        \u003cb\u003eFlagged Reasons:\u003c/b\u003e Normal account activities\n        "}, {"borderWidth": 2, "color": "#3B82F6", "font": {"color": "#e2e8f0"}, "id": "106", "label": "Acc: 106", "shape": "dot", "size": 18, "title": "\n        \u003cb\u003eAccount ID:\u003c/b\u003e 106\u003cbr/\u003e\n        \u003cb\u003eRisk Level:\u003c/b\u003e LOW RISK (0.0%)\u003cbr/\u003e\n        \u003cb\u003eIn-Volume:\u003c/b\u003e Rs 0.0\u003cbr/\u003e\n        \u003cb\u003eOut-Volume:\u003c/b\u003e Rs 50,000.0\u003cbr/\u003e\n        \u003cb\u003eConnections:\u003c/b\u003e In: 0, Out: 1\u003cbr/\u003e\n        \u003cb\u003eFlagged Reasons:\u003c/b\u003e Normal account activities\n        "}, {"borderWidth": 2, "color": "#3B82F6", "font": {"color": "#e2e8f0"}, "id": "110", "label": "Acc: 110", "shape": "dot", "size": 18, "title": "\n        \u003cb\u003eAccount ID:\u003c/b\u003e 110\u003cbr/\u003e\n        \u003cb\u003eRisk Level:\u003c/b\u003e LOW RISK (0.0%)\u003cbr/\u003e\n        \u003cb\u003eIn-Volume:\u003c/b\u003e Rs 0.0\u003cbr/\u003e\n        \u003cb\u003eOut-Volume:\u003c/b\u003e Rs 18,000.0\u003cbr/\u003e\n        \u003cb\u003eConnections:\u003c/b\u003e In: 0, Out: 1\u003cbr/\u003e\n        \u003cb\u003eFlagged Reasons:\u003c/b\u003e Normal account activities\n        "}, {"borderWidth": 2, "color": "#3B82F6", "font": {"color": "#e2e8f0"}, "id": "111", "label": "Acc: 111", "shape": "dot", "size": 18, "title": "\n        \u003cb\u003eAccount ID:\u003c/b\u003e 111\u003cbr/\u003e\n        \u003cb\u003eRisk Level:\u003c/b\u003e LOW RISK (0.0%)\u003cbr/\u003e\n        \u003cb\u003eIn-Volume:\u003c/b\u003e Rs 0.0\u003cbr/\u003e\n        \u003cb\u003eOut-Volume:\u003c/b\u003e Rs 14,000.0\u003cbr/\u003e\n        \u003cb\u003eConnections:\u003c/b\u003e In: 0, Out: 1\u003cbr/\u003e\n        \u003cb\u003eFlagged Reasons:\u003c/b\u003e Normal account activities\n        "}, {"borderWidth": 2, "color": "#3B82F6", "font": {"color": "#e2e8f0"}, "id": "301", "label": "Acc: 301", "shape": "dot", "size": 18, "title": "\n        \u003cb\u003eAccount ID:\u003c/b\u003e 301\u003cbr/\u003e\n        \u003cb\u003eRisk Level:\u003c/b\u003e LOW RISK (0.0%)\u003cbr/\u003e\n        \u003cb\u003eIn-Volume:\u003c/b\u003e Rs 0.0\u003cbr/\u003e\n        \u003cb\u003eOut-Volume:\u003c/b\u003e Rs 1,500.0\u003cbr/\u003e\n        \u003cb\u003eConnections:\u003c/b\u003e In: 0, Out: 1\u003cbr/\u003e\n        \u003cb\u003eFlagged Reasons:\u003c/b\u003e Normal account activities\n        "}, {"borderWidth": 2, "color": "#3B82F6", "font": {"color": "#e2e8f0"}, "id": "112", "label": "Acc: 112", "shape": "dot", "size": 18, "title": "\n        \u003cb\u003eAccount ID:\u003c/b\u003e 112\u003cbr/\u003e\n        \u003cb\u003eRisk Level:\u003c/b\u003e LOW RISK (0.0%)\u003cbr/\u003e\n        \u003cb\u003eIn-Volume:\u003c/b\u003e Rs 0.0\u003cbr/\u003e\n        \u003cb\u003eOut-Volume:\u003c/b\u003e Rs 20,000.0\u003cbr/\u003e\n        \u003cb\u003eConnections:\u003c/b\u003e In: 0, Out: 1\u003cbr/\u003e\n        \u003cb\u003eFlagged Reasons:\u003c/b\u003e Normal account activities\n        "}, {"borderWidth": 2, "color": "#3B82F6", "font": {"color": "#e2e8f0"}, "id": "302", "label": "Acc: 302", "shape": "dot", "size": 21, "title": "\n        \u003cb\u003eAccount ID:\u003c/b\u003e 302\u003cbr/\u003e\n        \u003cb\u003eRisk Level:\u003c/b\u003e LOW RISK (0.0%)\u003cbr/\u003e\n        \u003cb\u003eIn-Volume:\u003c/b\u003e Rs 1,500.0\u003cbr/\u003e\n        \u003cb\u003eOut-Volume:\u003c/b\u003e Rs 800.0\u003cbr/\u003e\n        \u003cb\u003eConnections:\u003c/b\u003e In: 1, Out: 1\u003cbr/\u003e\n        \u003cb\u003eFlagged Reasons:\u003c/b\u003e Normal account activities\n        "}, {"borderWidth": 2, "color": "#3B82F6", "font": {"color": "#e2e8f0"}, "id": "303", "label": "Acc: 303", "shape": "dot", "size": 21, "title": "\n        \u003cb\u003eAccount ID:\u003c/b\u003e 303\u003cbr/\u003e\n        \u003cb\u003eRisk Level:\u003c/b\u003e LOW RISK (0.0%)\u003cbr/\u003e\n        \u003cb\u003eIn-Volume:\u003c/b\u003e Rs 800.0\u003cbr/\u003e\n        \u003cb\u003eOut-Volume:\u003c/b\u003e Rs 0.0\u003cbr/\u003e\n        \u003cb\u003eConnections:\u003c/b\u003e In: 1, Out: 0\u003cbr/\u003e\n        \u003cb\u003eFlagged Reasons:\u003c/b\u003e Normal account activities\n        "}, {"borderWidth": 2, "color": "#3B82F6", "font": {"color": "#e2e8f0"}, "id": "304", "label": "Acc: 304", "shape": "dot", "size": 18, "title": "\n        \u003cb\u003eAccount ID:\u003c/b\u003e 304\u003cbr/\u003e\n        \u003cb\u003eRisk Level:\u003c/b\u003e LOW RISK (0.0%)\u003cbr/\u003e\n        \u003cb\u003eIn-Volume:\u003c/b\u003e Rs 0.0\u003cbr/\u003e\n        \u003cb\u003eOut-Volume:\u003c/b\u003e Rs 2,500.0\u003cbr/\u003e\n        \u003cb\u003eConnections:\u003c/b\u003e In: 0, Out: 1\u003cbr/\u003e\n        \u003cb\u003eFlagged Reasons:\u003c/b\u003e Normal account activities\n        "}, {"borderWidth": 2, "color": "#3B82F6", "font": {"color": "#e2e8f0"}, "id": "306", "label": "Acc: 306", "shape": "dot", "size": 21, "title": "\n        \u003cb\u003eAccount ID:\u003c/b\u003e 306\u003cbr/\u003e\n        \u003cb\u003eRisk Level:\u003c/b\u003e LOW RISK (0.0%)\u003cbr/\u003e\n        \u003cb\u003eIn-Volume:\u003c/b\u003e Rs 1,200.0\u003cbr/\u003e\n        \u003cb\u003eOut-Volume:\u003c/b\u003e Rs 0.0\u003cbr/\u003e\n        \u003cb\u003eConnections:\u003c/b\u003e In: 1, Out: 0\u003cbr/\u003e\n        \u003cb\u003eFlagged Reasons:\u003c/b\u003e Normal account activities\n        "}]);
+                  edges = new vis.DataSet([{"arrowStrikethrough": false, "arrows": "to", "color": "#475569", "from": "101", "title": "Transacted Amount: Rs 45,000.0\u003cbr/\u003eCount: 1", "to": "500", "value": 45000.0, "width": 7}, {"arrowStrikethrough": false, "arrows": "to", "color": "#475569", "from": "102", "title": "Transacted Amount: Rs 62,000.0\u003cbr/\u003eCount: 1", "to": "500", "value": 62000.0, "width": 8}, {"arrowStrikethrough": false, "arrows": "to", "color": "#475569", "from": "103", "title": "Transacted Amount: Rs 125,000.0\u003cbr/\u003eCount: 1", "to": "500", "value": 125000.0, "width": 8}, {"arrowStrikethrough": false, "arrows": "to", "color": "#475569", "from": "104", "title": "Transacted Amount: Rs 30,000.0\u003cbr/\u003eCount: 1", "to": "500", "value": 30000.0, "width": 7}, {"arrowStrikethrough": false, "arrows": "to", "color": "#475569", "from": "105", "title": "Transacted Amount: Rs 80,000.0\u003cbr/\u003eCount: 1", "to": "201", "value": 80000.0, "width": 8}, {"arrowStrikethrough": false, "arrows": "to", "color": "#475569", "from": "201", "title": "Transacted Amount: Rs 79,000.0\u003cbr/\u003eCount: 1", "to": "900", "value": 79000.0, "width": 8}, {"arrowStrikethrough": false, "arrows": "to", "color": "#475569", "from": "106", "title": "Transacted Amount: Rs 50,000.0\u003cbr/\u003eCount: 1", "to": "202", "value": 50000.0, "width": 8}, {"arrowStrikethrough": false, "arrows": "to", "color": "#475569", "from": "202", "title": "Transacted Amount: Rs 49,500.0\u003cbr/\u003eCount: 1", "to": "900", "value": 49500.0, "width": 8}, {"arrowStrikethrough": false, "arrows": "to", "color": "#475569", "from": "107", "title": "Transacted Amount: Rs 250,000.0\u003cbr/\u003eCount: 1", "to": "203", "value": 250000.0, "width": 9}, {"arrowStrikethrough": false, "arrows": "to", "color": "#475569", "from": "203", "title": "Transacted Amount: Rs 249,000.0\u003cbr/\u003eCount: 1", "to": "900", "value": 249000.0, "width": 9}, {"arrowStrikethrough": false, "arrows": "to", "color": "#475569", "from": "108", "title": "Transacted Amount: Rs 15,000.0\u003cbr/\u003eCount: 1", "to": "888", "value": 15000.0, "width": 7}, {"arrowStrikethrough": false, "arrows": "to", "color": "#475569", "from": "109", "title": "Transacted Amount: Rs 12,000.0\u003cbr/\u003eCount: 1", "to": "888", "value": 12000.0, "width": 7}, {"arrowStrikethrough": false, "arrows": "to", "color": "#475569", "from": "110", "title": "Transacted Amount: Rs 18,000.0\u003cbr/\u003eCount: 1", "to": "888", "value": 18000.0, "width": 7}, {"arrowStrikethrough": false, "arrows": "to", "color": "#475569", "from": "111", "title": "Transacted Amount: Rs 14,000.0\u003cbr/\u003eCount: 1", "to": "888", "value": 14000.0, "width": 7}, {"arrowStrikethrough": false, "arrows": "to", "color": "#475569", "from": "112", "title": "Transacted Amount: Rs 20,000.0\u003cbr/\u003eCount: 1", "to": "888", "value": 20000.0, "width": 7}, {"arrowStrikethrough": false, "arrows": "to", "color": "#475569", "from": "301", "title": "Transacted Amount: Rs 1,500.0\u003cbr/\u003eCount: 1", "to": "302", "value": 1500.0, "width": 5}, {"arrowStrikethrough": false, "arrows": "to", "color": "#475569", "from": "302", "title": "Transacted Amount: Rs 800.0\u003cbr/\u003eCount: 1", "to": "303", "value": 800.0, "width": 5}, {"arrowStrikethrough": false, "arrows": "to", "color": "#475569", "from": "304", "title": "Transacted Amount: Rs 2,500.0\u003cbr/\u003eCount: 1", "to": "305", "value": 2500.0, "width": 6}, {"arrowStrikethrough": false, "arrows": "to", "color": "#475569", "from": "305", "title": "Transacted Amount: Rs 1,200.0\u003cbr/\u003eCount: 1", "to": "306", "value": 1200.0, "width": 5}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {"physics": {"forceAtlas2Based": {"gravitationalConstant": -60, "centralGravity": 0.015, "springLength": 110, "springConstant": 0.08}, "maxVelocity": 45, "solver": "forceAtlas2Based", "timestep": 0.35, "stabilization": {"iterations": 100}}, "edges": {"smooth": {"type": "dynamic"}}};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

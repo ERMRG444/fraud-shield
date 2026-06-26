@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fraud Shield | AI Digital Public Safety Platform</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            800: '#1e293b',
+                            900: '#0f172a',
+                            950: '#020617',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Socket.IO -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 flex flex-col h-screen">
+
+    <!-- 1. Live Threat Alert Ticker -->
+    <div class="ticker-container flex-shrink-0">
+        <span class="ticker-title">Live Threat Feed</span>
+        <div class="ticker-wrapper">
+            <span id="ticker-text" class="ticker-text">
+                ALERT: Monitoring live public channels... Ready to ingest transaction ledger, call audio transcript, and currency scan frames.
+            </span>
+        </div>
+    </div>
+
+    <!-- 2. Dashboard Header -->
+    <header class="flex-shrink-0">
+        <div class="logo-container">
+            <!-- Shield SVG Icon -->
+            <svg class="logo-shield w-8 h-8 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.248-8.25-3.285z"></path>
+            </svg>
+            <div>
+                <h1 class="text-xl font-extrabold tracking-wider text-slate-100">FRAUD SHIELD</h1>
+                <p class="text-xs text-slate-400 font-medium">AI-POWERED DIGITAL PUBLIC SAFETY COMMAND CENTER</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 px-3 py-1 bg-slate-900 border border-slate-800 rounded-full">
+                <span class="status-indicator status-green"></span>
+                <span class="text-xs text-slate-300 font-bold uppercase tracking-wider">Systems Online</span>
+            </div>
+            <span class="text-xs text-slate-500 font-mono">ET HACKATHON 2026</span>
+        </div>
+    </header>
+
+    <!-- 3. Executive Stats Panel -->
+    <div class="stats-grid flex-shrink-0">
+        <div class="glass-panel stat-card">
+            <div>
+                <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Investigations Logged</p>
+                <div id="card-complaints" class="stat-value text-blue-400">{{ stats.complaints_today }}</div>
+            </div>
+            <div class="p-3 bg-blue-500/10 rounded-lg text-blue-500">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            </div>
+        </div>
+        <div class="glass-panel stat-card">
+            <div>
+                <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Threats Intercepted</p>
+                <div id="card-fraud" class="stat-value text-rose-400">{{ stats.fraud_detected }}</div>
+            </div>
+            <div class="p-3 bg-rose-500/10 rounded-lg text-rose-500">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            </div>
+        </div>
+        <div class="glass-panel stat-card col-span-1 md:col-span-2">
+            <div>
+                <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Capital Protected</p>
+                <div id="card-amount" class="stat-value text-emerald-400">{{ stats.amount_protected }}</div>
+            </div>
+            <div class="p-3 bg-emerald-500/10 rounded-lg text-emerald-500">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Dashboard Main Layout -->
+    <main class="dashboard-main flex-grow overflow-hidden">
+        
+        <!-- Tab Bar -->
+        <div class="tab-bar">
+            <button class="tab-btn active" data-tab="currency-tab">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                Currency Authenticator
+            </button>
+            <button class="tab-btn" data-tab="scam-tab">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z"></path></svg>
+                Digital Arrest Call Classifier
+            </button>
+            <button class="tab-btn" data-tab="graph-tab">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"></path></svg>
+                Fraud Network Graph
+            </button>
+        </div>
+
+        <!-- Tab Contents -->
+        
+        <!-- Tab 1: Currency Authenticator -->
+        <div class="tab-content active module-grid-two" id="currency-tab">
+            <!-- Left: Video Input / Scanner -->
+            <div class="glass-panel panel-container">
+                <div class="panel-header">
+                    <span>Input Feed (Webcam Scan / Image Upload)</span>
+                    <div class="flex gap-2">
+                        <button id="toggle-webcam-btn" class="btn-primary">Start Video Scan</button>
+                        <button id="snap-frame-btn" class="btn-secondary" style="display: none;">Snap & Analyze</button>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div class="camera-wrapper">
+                        <video id="webcam-video" class="camera-feed" autoplay playsinline muted></video>
+                        <canvas id="webcam-canvas" style="display:none;"></canvas>
+                        <div class="camera-guidelist"></div>
+                    </div>
+                    
+                    <div class="text-center font-bold text-xs text-slate-500 py-1">OR</div>
+                    
+                    <div id="currency-drop-area" class="drag-drop-area">
+                        <svg class="w-12 h-12 mx-auto text-slate-400 mb-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                        </svg>
+                        <span class="text-base font-semibold text-slate-300 block">Drag & Drop Banknote Image</span>
+                        <p class="drag-drop-text">Supports JPG / PNG (Rs 500, Rs 200, Rs 100 notes)</p>
+                        <input type="file" id="note-image-upload" class="hidden" accept="image/*">
+                        <button type="button" id="upload-select-btn" class="btn-primary px-6 py-2 mt-4 mx-auto">Select Image File</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right: CV Output Panel -->
+            <div class="glass-panel panel-container">
+                <div class="panel-header">
+                    <span>Counterfeit Verification Report</span>
+                    <span id="note-status-badge" class="badge">N/A</span>
+                </div>
+                <div class="panel-body">
+                    <div class="flex justify-between items-center bg-slate-900/50 p-4 border border-slate-800 rounded-lg">
+                        <div>
+                            <span class="text-xs text-slate-400 font-bold uppercase block">Denomination</span>
+                            <span id="note-denom-val" class="text-xl font-extrabold text-blue-400">Scan Pending...</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs text-slate-400 font-bold uppercase block">Verification Confidence</span>
+                            <span id="note-confidence-val" class="text-xl font-extrabold text-emerald-400">0.0%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col gap-2">
+                        <span class="text-xs text-slate-400 font-bold uppercase">Feature Inspection</span>
+                        <!-- Checklist Items -->
+                        <div id="chk-thread" class="checklist-item opacity-40">
+                            <div class="flex items-center">
+                                <span class="check-icon mr-2">⚪</span>
+                                <div>
+                                    <span class="checklist-title">Security Thread Verification</span>
+                                    <p class="checklist-desc">Presence of vertical metallic thread</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="chk-microprint" class="checklist-item opacity-40">
+                            <div class="flex items-center">
+                                <span class="check-icon mr-2">⚪</span>
+                                <div>
+                                    <span class="checklist-title">Microprint Sharpness (Border)</span>
+                                    <p class="checklist-desc">Analysis of fine-border printing contrast</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="chk-serial" class="checklist-item opacity-40">
+                            <div class="flex items-center">
+                                <span class="check-icon mr-2">⚪</span>
+                                <div>
+                                    <span class="checklist-title">Serial Number Format Validation</span>
+                                    <p class="checklist-desc">Regex check on digit-letter prefix patterns</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="chk-color-shift" class="checklist-item opacity-40">
+                            <div class="flex items-center">
+                                <span class="check-icon mr-2">⚪</span>
+                                <div>
+                                    <span class="checklist-title">Color Shifting Ink Check</span>
+                                    <p class="checklist-desc">Verifying green-blue HSV shift at bottom right</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="chk-bleed" class="checklist-item opacity-40">
+                            <div class="flex items-center">
+                                <span class="check-icon mr-2">⚪</span>
+                                <div>
+                                    <span class="checklist-title">Bleed Line Geometry</span>
+                                    <p class="checklist-desc">Check diagonal contour layout on margins</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-grow flex items-center justify-center border border-slate-800/40 rounded-lg p-2 bg-black/20">
+                        <img id="note-warped-img" src="" alt="Analyzed Banknote Output" class="max-w-full max-h-[140px] object-contain rounded border border-slate-700" style="display: none;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Digital Arrest Call Classifier -->
+        <div class="tab-content module-grid-three" id="scam-tab">
+            <!-- Left: Call Simulation Panel -->
+            <div class="glass-panel panel-container">
+                <div class="panel-header">
+                    <span>📞 Scam Call Simulator</span>
+                    <span id="sim-status-badge" class="badge bg-slate-800 text-slate-400 border border-slate-700">IDLE</span>
+                </div>
+                <div class="panel-body">
+                    <!-- Scenario Selector -->
+                    <div class="bg-slate-900/50 p-3 border border-slate-800 rounded-lg mb-2">
+                        <label class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1.5">Select Scam Scenario</label>
+                        <select id="sim-scam-type" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500">
+                            <option value="digital_arrest">🚔 Digital Arrest (CBI/Customs Impersonation)</option>
+                            <option value="kyc_fraud">🏦 KYC / Banking Fraud</option>
+                            <option value="investment_scam">📈 Investment / Trading Scam</option>
+                            <option value="lottery_scam">🎰 Lottery / Prize Scam</option>
+                        </select>
+                    </div>
+                    
+                    <button id="sim-call-btn" class="w-full py-2.5 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all duration-300 bg-gradient-to-r from-rose-600 to-orange-600 hover:from-rose-500 hover:to-orange-500 text-white shadow-lg shadow-rose-500/20">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"></path></svg>
+                        Simulate Incoming Scam Call
+                    </button>
+                    
+                    <!-- Call Status Animation -->
+                    <div id="sim-progress" class="mt-3 hidden">
+                        <div class="flex flex-col gap-1.5">
+                            <div id="sim-step-1" class="flex items-center gap-2 text-xs text-slate-500 transition-all">
+                                <span class="sim-step-dot w-2 h-2 rounded-full bg-slate-700"></span>
+                                <span>Incoming call detected...</span>
+                            </div>
+                            <div id="sim-step-2" class="flex items-center gap-2 text-xs text-slate-500 transition-all">
+                                <span class="sim-step-dot w-2 h-2 rounded-full bg-slate-700"></span>
+                                <span>Extracting caller metadata...</span>
+                            </div>
+                            <div id="sim-step-3" class="flex items-center gap-2 text-xs text-slate-500 transition-all">
+                                <span class="sim-step-dot w-2 h-2 rounded-full bg-slate-700"></span>
+                                <span>Running spoof detection...</span>
+                            </div>
+                            <div id="sim-step-4" class="flex items-center gap-2 text-xs text-slate-500 transition-all">
+                                <span class="sim-step-dot w-2 h-2 rounded-full bg-slate-700"></span>
+                                <span>NLP transcript classification...</span>
+                            </div>
+                            <div id="sim-step-5" class="flex items-center gap-2 text-xs text-slate-500 transition-all">
+                                <span class="sim-step-dot w-2 h-2 rounded-full bg-slate-700"></span>
+                                <span>📱 WhatsApp alert to victim...</span>
+                            </div>
+                            <div id="sim-step-6" class="flex items-center gap-2 text-xs text-slate-500 transition-all">
+                                <span class="sim-step-dot w-2 h-2 rounded-full bg-slate-700"></span>
+                                <span>📡 Telecom provider flag posted...</span>
+                            </div>
+                            <div id="sim-step-7" class="flex items-center gap-2 text-xs text-slate-500 transition-all">
+                                <span class="sim-step-dot w-2 h-2 rounded-full bg-slate-700"></span>
+                                <span>🏛 MHA report + SHA-256 audit log...</span>
+                            </div>
+                            <div id="sim-step-8" class="flex items-center gap-2 text-xs text-slate-500 transition-all">
+                                <span class="sim-step-dot w-2 h-2 rounded-full bg-slate-700"></span>
+                                <span>All response actions completed</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Caller Metadata Display -->
+                    <div id="sim-metadata-panel" class="mt-2 hidden">
+                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Intercepted Caller Metadata</span>
+                        <div class="bg-black/40 border border-slate-800 rounded-lg overflow-hidden">
+                            <table class="w-full text-[11px]">
+                                <tbody id="sim-metadata-table" class="divide-y divide-slate-800/50">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Spoof Indicators -->
+                    <div id="sim-spoof-panel" class="mt-2 hidden">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Spoof Risk Indicators</span>
+                            <span id="sim-spoof-score" class="text-sm font-extrabold text-rose-400">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-800 rounded-full h-1.5 mb-2">
+                            <div id="sim-spoof-bar" class="bg-rose-500 h-full rounded-full transition-all duration-700" style="width: 0%;"></div>
+                        </div>
+                        <div id="sim-indicators-list" class="flex flex-col gap-1"></div>
+                    </div>
+
+                    <!-- Response Action 1: WhatsApp Alert -->
+                    <div id="sim-whatsapp-panel" class="mt-2 hidden">
+                        <span class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider block mb-1">✅ Action 1 — WhatsApp Victim Alert</span>
+                        <div class="bg-[#0b3d2e] border border-emerald-800/60 rounded-lg p-2.5">
+                            <div class="flex items-center gap-2 mb-1.5">
+                                <span class="text-emerald-400 text-xs font-bold">📱 WhatsApp Business API</span>
+                                <span class="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-bold">DELIVERED</span>
+                            </div>
+                            <div class="bg-[#005c4b] rounded-lg p-2 text-[10px] text-emerald-100 leading-4 font-mono max-h-[120px] overflow-y-auto" id="sim-whatsapp-msg"></div>
+                            <div class="flex justify-between mt-1.5 text-[9px] text-emerald-600">
+                                <span id="sim-wa-to">To: —</span>
+                                <span id="sim-wa-sid">SID: —</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Response Action 2: Telecom Flag -->
+                    <div id="sim-telecom-panel" class="mt-2 hidden">
+                        <span class="text-[10px] text-yellow-400 font-bold uppercase tracking-wider block mb-1">✅ Action 2 — Telecom Provider Flag</span>
+                        <div class="bg-yellow-500/5 border border-yellow-800/40 rounded-lg p-2.5">
+                            <div class="flex items-center justify-between mb-1.5">
+                                <span class="text-yellow-400 text-xs font-bold">📡 TRAI CFCFRMS API</span>
+                                <span id="sim-telecom-status" class="text-[10px] bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 px-1.5 py-0.5 rounded font-bold">ACCEPTED</span>
+                            </div>
+                            <div class="bg-black/30 rounded p-2 text-[10px] font-mono overflow-y-auto max-h-[100px]">
+                                <table class="w-full">
+                                    <tbody id="sim-telecom-table" class="divide-y divide-slate-800/40"></tbody>
+                                </table>
+                            </div>
+                            <div class="flex justify-between mt-1.5 text-[9px] text-yellow-700">
+                                <span id="sim-telecom-reqid">Request ID: —</span>
+                                <span id="sim-telecom-action" class="text-rose-400 font-bold">—</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Response Action 3: MHA Report -->
+                    <div id="sim-mha-panel" class="mt-2 hidden">
+                        <span class="text-[10px] text-purple-400 font-bold uppercase tracking-wider block mb-1">✅ Action 3 — MHA Incident Report</span>
+                        <div class="bg-purple-500/5 border border-purple-800/40 rounded-lg p-2.5">
+                            <div class="flex items-center justify-between mb-1.5">
+                                <span class="text-purple-400 text-xs font-bold">🏛 I4C Cybercrime Portal</span>
+                                <span id="sim-mha-id" class="text-[10px] bg-purple-500/20 text-purple-400 border border-purple-500/30 px-1.5 py-0.5 rounded font-bold font-mono">—</span>
+                            </div>
+                            <div class="flex flex-col gap-1 text-[10px]">
+                                <div class="flex justify-between"><span class="text-slate-500">Status:</span><span id="sim-mha-status" class="text-emerald-400 font-bold">—</span></div>
+                                <div class="flex justify-between"><span class="text-slate-500">Loss Prevented:</span><span id="sim-mha-loss" class="text-emerald-400 font-bold">—</span></div>
+                            </div>
+                            <div class="mt-1.5 text-[10px]">
+                                <span class="text-slate-500 font-bold">Legal Sections:</span>
+                                <div id="sim-mha-sections" class="mt-0.5 flex flex-col gap-0.5"></div>
+                            </div>
+                            <div class="mt-1.5 bg-black/30 rounded p-1.5 text-[9px] font-mono">
+                                <span class="text-slate-500 block mb-0.5">SHA-256 Evidence Chain:</span>
+                                <div class="text-purple-400 break-all" id="sim-mha-hash">—</div>
+                                <div class="text-slate-600 break-all mt-0.5" id="sim-mha-prev-hash">Prev: —</div>
+                                <div class="flex items-center gap-1 mt-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                    <span class="text-emerald-500 font-bold">Tamper-proof • IT Act 65B(4)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Middle: Call transcript & audio uploads -->
+            <div class="glass-panel panel-container">
+                <div class="panel-header">
+                    <span>Acoustic & Text Source Ingestion</span>
+                </div>
+                <div class="panel-body">
+                    <div id="scam-drop-area" class="drag-drop-area mb-2">
+                        <svg class="w-8 h-8 mx-auto text-slate-400 mb-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z"></path></svg>
+                        <span class="text-sm font-semibold text-slate-300">Upload Scam Call Audio Record</span>
+                        <p class="drag-drop-text">Drag & drop Call recording WAV / MP3 (Whisper tiny offline translation)</p>
+                        <input type="file" id="scam-audio-upload" class="hidden" accept="audio/*">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Quick Load Samples (Click to Download):</span>
+                        <div class="flex flex-wrap gap-2">
+                            <a href="/static/audio/digital_arrest_scam.mp3" download class="text-[11px] bg-slate-900 border border-slate-800 px-3 py-1.5 rounded hover:bg-slate-800 hover:border-slate-700 transition-colors flex items-center gap-1 text-slate-300">
+                                📥 Digital Arrest
+                            </a>
+                            <a href="/static/audio/kyc_fraud_scam.mp3" download class="text-[11px] bg-slate-900 border border-slate-800 px-3 py-1.5 rounded hover:bg-slate-800 hover:border-slate-700 transition-colors flex items-center gap-1 text-slate-300">
+                                📥 KYC Fraud
+                            </a>
+                            <a href="/static/audio/investment_scam.mp3" download class="text-[11px] bg-slate-900 border border-slate-800 px-3 py-1.5 rounded hover:bg-slate-800 hover:border-slate-700 transition-colors flex items-center gap-1 text-slate-300">
+                                📥 Investment Scam
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-grow flex flex-col gap-2">
+                        <label class="text-xs text-slate-400 font-bold uppercase">Or Paste Call Transcript</label>
+                        <textarea id="scam-text-input" class="flex-grow bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm text-slate-300 focus:outline-none focus:border-blue-500 font-sans resize-none" placeholder="Enter transcript text... E.g., 'Hello this is CBI officer. We found drugs in your parcel and you are under digital arrest. Stay on call and transfer rupees 50000...'"></textarea>
+                    </div>
+                    
+                    <button id="submit-scam-btn" class="btn-primary w-full justify-center py-2.5">
+                        Analyze Call Transcript
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Right: Classification Results & Report -->
+            <div class="glass-panel panel-container">
+                <div class="panel-header">
+                    <span>NLP Classification Audit</span>
+                    <span id="scam-class-badge" class="badge">N/A</span>
+                </div>
+                <div class="panel-body">
+                    <!-- Gauge -->
+                    <div class="bg-slate-900/50 p-4 border border-slate-800 rounded-lg">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-xs text-slate-400 font-bold uppercase">Scam Threat Risk Score</span>
+                            <span id="scam-risk-val" class="text-lg font-extrabold text-rose-400">0.0%</span>
+                        </div>
+                        <div class="w-full bg-slate-800 rounded-full h-2">
+                            <div id="scam-risk-bar" class="bg-rose-500 h-full rounded-full transition-all duration-500" style="width: 0%;"></div>
+                        </div>
+                        <div class="mt-3 flex justify-between items-center text-xs">
+                            <span class="text-slate-400">Detected Category:</span>
+                            <span id="scam-category-val" class="text-slate-200 font-bold">N/A</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Highlighting Transcript display -->
+                    <div class="flex-grow flex flex-col gap-1 overflow-hidden min-h-[130px]">
+                        <span class="text-xs text-slate-400 font-bold uppercase">Processed Transcription</span>
+                        <div id="scam-transcript-display" class="flex-grow bg-slate-950 border border-slate-850 p-3 rounded-lg overflow-y-auto font-mono text-xs leading-5 text-slate-400 whitespace-pre-wrap select-all">
+                            No transcript analyzed yet. Submit text or upload call audio.
+                        </div>
+                    </div>
+                    
+                    <!-- Complaint Area -->
+                    <div class="flex-grow flex flex-col gap-1 overflow-hidden min-h-[180px]">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-slate-400 font-bold uppercase">Auto-Generated MHA Cybercrime Draft</span>
+                            <button id="download-complaint-btn" class="btn-primary text-xs py-1 px-2.5" style="display: none;">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m0 0l-3-3m3 3l3-3m-12 8h18"></path></svg>
+                                Download Report PDF
+                            </button>
+                        </div>
+                        <textarea id="mha-complaint-text" readonly class="flex-grow bg-slate-950 border border-slate-850 p-3 rounded-lg font-mono text-xs leading-5 text-slate-500 resize-none overflow-y-auto select-all" placeholder="National Cybercrime Portal complaint report draft matches here after scam flag."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Fraud Network Graph -->
+        <div class="tab-content module-grid-two" id="graph-tab">
+            <!-- Left: Ledger File & suspect table list -->
+            <div class="glass-panel panel-container">
+                <div class="panel-header">
+                    <span>Transaction Ledger Ingestion</span>
+                    <a id="download-report-btn" href="/download_report" class="btn-primary text-xs" style="display: none;">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m0 0l-3-3m3 3l3-3m-12 8h18"></path></svg>
+                        Export Evidence PDF Package
+                    </a>
+                </div>
+                <div class="panel-body">
+                    <div id="graph-drop-area" class="drag-drop-area py-8">
+                        <svg class="w-8 h-8 mx-auto text-slate-400 mb-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <span class="text-sm font-semibold text-slate-300">Upload Transaction Ledger CSV</span>
+                        <p class="drag-drop-text">Drag & drop ledger dataset CSV [sender_id, receiver_id, amount, timestamp, location, device_id]</p>
+                        <input type="file" id="csv-file-input" class="hidden" accept=".csv">
+                    </div>
+                    
+                    <!-- Graph Stats grid -->
+                    <div class="grid grid-cols-4 grid-flow-col gap-2 bg-slate-900/40 p-3 border border-slate-800/80 rounded-lg text-center font-mono">
+                        <div>
+                            <span class="text-[10px] text-slate-400 uppercase font-sans font-bold block">Nodes</span>
+                            <span id="g-stat-nodes" class="text-sm font-bold text-blue-400">15</span>
+                        </div>
+                        <div class="border-l border-slate-800">
+                            <span class="text-[10px] text-slate-400 uppercase font-sans font-bold block">Edges</span>
+                            <span id="g-stat-edges" class="text-sm font-bold text-slate-300">19</span>
+                        </div>
+                        <div class="border-l border-slate-800">
+                            <span class="text-[10px] text-slate-400 uppercase font-sans font-bold block">Flagged Mules</span>
+                            <span id="g-stat-mules" class="text-sm font-bold text-rose-400">3</span>
+                        </div>
+                        <div class="border-l border-slate-800">
+                            <span class="text-[10px] text-slate-400 uppercase font-sans font-bold block">Graph Volume</span>
+                            <span id="g-stat-volume" class="text-sm font-bold text-emerald-400">Rs 970,000</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Table showing flagged nodes -->
+                    <div class="flex-grow flex flex-col gap-1 overflow-hidden min-h-[240px]">
+                        <span class="text-xs text-slate-400 font-bold uppercase">Link Analysis Suspect Accounts</span>
+                        <div class="flex-grow border border-slate-800 rounded-lg overflow-auto bg-slate-950">
+                            <table class="log-table">
+                                <thead>
+                                    <tr>
+                                        <th>Account ID</th>
+                                        <th class="text-center">Risk Score</th>
+                                        <th>Risk Label</th>
+                                        <th class="text-right">In Volume</th>
+                                        <th class="text-right">Out Volume</th>
+                                        <th>Flags</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="accounts-table-body">
+                                    <!-- Prepopulate default mock values on initial load -->
+                                    <tr>
+                                        <td class="font-bold font-mono text-slate-300">#900</td>
+                                        <td class="font-bold text-center">90%</td>
+                                        <td><span class="badge badge-fake">CRITICAL / MULE</span></td>
+                                        <td class="text-right font-mono font-medium text-emerald-400">Rs 377,500</td>
+                                        <td class="text-right font-mono font-medium text-rose-400">Rs 0</td>
+                                        <td class="text-xs text-slate-400">Mule Activity (Rapid funds cycling)</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-bold font-mono text-slate-300">#500</td>
+                                        <td class="font-bold text-center">80%</td>
+                                        <td><span class="badge badge-fake">CRITICAL / MULE</span></td>
+                                        <td class="text-right font-mono font-medium text-emerald-400">Rs 262,000</td>
+                                        <td class="text-right font-mono font-medium text-rose-400">Rs 0</td>
+                                        <td class="text-xs text-slate-400">Hub Account (4 incoming victims)</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-bold font-mono text-slate-300">#888</td>
+                                        <td class="font-bold text-center">55%</td>
+                                        <td><span class="badge badge-suspect">SUSPICIOUS</span></td>
+                                        <td class="text-right font-mono font-medium text-emerald-400">Rs 79,000</td>
+                                        <td class="text-right font-mono font-medium text-rose-400">Rs 0</td>
+                                        <td class="text-xs text-slate-400">Hub Account (5 incoming victims), Temporal Transaction Burst</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-bold font-mono text-slate-300">#203</td>
+                                        <td class="font-bold text-center">45%</td>
+                                        <td><span class="badge badge-suspect">SUSPICIOUS</span></td>
+                                        <td class="text-right font-mono font-medium text-emerald-400">Rs 250,000</td>
+                                        <td class="text-right font-mono font-medium text-rose-400">Rs 249,000</td>
+                                        <td class="text-xs text-slate-400">Mule Activity (Rapid funds cycling)</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right: PyVis HTML Canvas Frame -->
+            <div class="glass-panel panel-container">
+                <div class="panel-header">
+                    <span>Interactive Link Analysis Graph</span>
+                    <span class="status-indicator status-green"></span>
+                </div>
+                <div class="panel-body p-1 bg-[#0b0f19]">
+                    <!-- Embedded PyVis Graph HTML Page -->
+                    <iframe id="graph-iframe" src="{{ url_for('static', filename='fraud_graph.html') }}" class="graph-iframe flex-grow border-0"></iframe>
+                </div>
+            </div>
+        </div>
+        
+    </main>
+
+    <!-- JS Dashboard Controls -->
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>

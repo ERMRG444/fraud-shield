@@ -1,0 +1,17 @@
+flask
+flask-socketio
+opencv-python
+numpy
+scikit-learn
+transformers
+torch
+networkx
+pyvis
+openai-whisper
+speechrecognition
+pillow
+pandas
+reportlab
+matplotlib
+pydub
+eventlet
