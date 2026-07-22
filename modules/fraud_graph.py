@@ -600,6 +600,56 @@ def generate_mock_transactions_csv(output_csv_path):
     print(f"Mock transactions CSV generated at {output_csv_path}.")
 
 
+def generate_layering_sample_csv(output_csv_path):
+    """Generates a synthetic transaction CSV demonstrating rapid layering/cycling (multi-hop)."""
+    rows = [
+        # Chain 1: 401 -> 402 -> 403 -> 404 -> 900 (Rapid cycling)
+        ["401", "402", 100000, "2026-06-23 10:00:00", "New Delhi", "D-Android-01"],
+        ["402", "403", 99000, "2026-06-23 10:15:00", "Gurugram", "D-Android-02"],
+        ["403", "404", 98000, "2026-06-23 10:30:00", "Noida", "D-Android-03"],
+        ["404", "900", 97000, "2026-06-23 10:45:00", "Delhi", "D-Android-04"],
+        
+        # Chain 2: 411 -> 412 -> 413 -> 900 (Rapid cycling)
+        ["411", "412", 50000, "2026-06-23 11:00:00", "Mumbai", "D-iPhone-01"],
+        ["412", "413", 49500, "2026-06-23 11:10:00", "Thane", "D-iPhone-02"],
+        ["413", "900", 49000, "2026-06-23 11:20:00", "Pune", "D-iPhone-03"],
+
+        # Normal activity in background
+        ["501", "502", 1200, "2026-06-23 09:15:00", "Kolkata", "D-Web-05"],
+        ["502", "503", 850, "2026-06-23 13:40:00", "Patna", "D-Web-06"],
+        ["504", "505", 2200, "2026-06-23 14:00:00", "Bengaluru", "D-Android-08"],
+        ["505", "506", 1900, "2026-06-23 15:30:00", "Mysuru", "D-Android-09"]
+    ]
+    df = pd.DataFrame(rows, columns=["sender_id", "receiver_id", "amount", "timestamp", "location", "device_id"])
+    df.to_csv(output_csv_path, index=False)
+    print(f"Layering sample CSV generated at {output_csv_path}.")
+
+
+def generate_burst_sample_csv(output_csv_path):
+    """Generates a synthetic transaction CSV demonstrating high-velocity temporal bursts and pooling."""
+    rows = [
+        # Rapid pooling into Node 600 from 6 victims in 10 minutes
+        ["801", "600", 25000, "2026-06-23 12:00:00", "Kolkata", "D-Web-10"],
+        ["802", "600", 30000, "2026-06-23 12:02:00", "Patna", "D-Web-11"],
+        ["803", "600", 15000, "2026-06-23 12:04:00", "Ranchi", "D-Web-12"],
+        ["804", "600", 40000, "2026-06-23 12:06:00", "Bhubaneswar", "D-Web-13"],
+        ["805", "600", 35000, "2026-06-23 12:08:00", "Guwahati", "D-Web-14"],
+        ["806", "600", 20000, "2026-06-23 12:10:00", "Siliguri", "D-Web-15"],
+        
+        # Immediate draining of Node 600
+        ["600", "999", 160000, "2026-06-23 12:15:00", "Delhi", "D-Android-99"],
+        
+        # Background legitimate transactions
+        ["710", "711", 1500, "2026-06-23 13:00:00", "Mumbai", "D-iPhone-10"],
+        ["711", "712", 1200, "2026-06-23 14:00:00", "Pune", "D-iPhone-11"],
+        ["713", "714", 3000, "2026-06-23 15:00:00", "Bengaluru", "D-Android-21"]
+    ]
+    df = pd.DataFrame(rows, columns=["sender_id", "receiver_id", "amount", "timestamp", "location", "device_id"])
+    df.to_csv(output_csv_path, index=False)
+    print(f"Burst sample CSV generated at {output_csv_path}.")
+
+
+
 if __name__ == "__main__":
     csv_out = os.path.join(DATA_DIR, "sample_transactions.csv")
     generate_mock_transactions_csv(csv_out)

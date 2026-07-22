@@ -21,7 +21,8 @@ from flask_socketio import SocketIO, emit
 # Import modules
 from modules.currency_detector import detect_note, analyze_banknote
 from modules.scam_classifier import classify_text, transcribe_audio, train_scam_model
-from modules.fraud_graph import analyze_transactions, generate_interactive_graph, generate_pdf_report, generate_mock_transactions_csv
+from modules.fraud_graph import (analyze_transactions, generate_interactive_graph, generate_pdf_report,
+                                 generate_mock_transactions_csv, generate_layering_sample_csv, generate_burst_sample_csv)
 from modules.call_simulator import (simulate_incoming_call, analyze_spoof_indicators, print_terminal_metadata,
                                      generate_whatsapp_alert, generate_telecom_flag, generate_mha_report,
                                      append_audit_log, print_response_actions, send_real_whatsapp_alert)
@@ -572,6 +573,25 @@ if __name__ == '__main__':
     if not os.path.exists(sample_csv):
         print("Generating mock transaction CSV...")
         generate_mock_transactions_csv(sample_csv)
+        
+    # Generate CSV files in static/csv/ for user download
+    static_csv_dir = os.path.join(STATIC_DIR, "csv")
+    os.makedirs(static_csv_dir, exist_ok=True)
+    
+    mule_csv = os.path.join(static_csv_dir, "mule_pooling_sample.csv")
+    if not os.path.exists(mule_csv):
+        print("Generating static mule pooling sample CSV...")
+        generate_mock_transactions_csv(mule_csv)
+        
+    layering_csv = os.path.join(static_csv_dir, "rapid_layering_sample.csv")
+    if not os.path.exists(layering_csv):
+        print("Generating static rapid layering sample CSV...")
+        generate_layering_sample_csv(layering_csv)
+        
+    burst_csv = os.path.join(static_csv_dir, "suspicious_burst_sample.csv")
+    if not os.path.exists(burst_csv):
+        print("Generating static temporal burst sample CSV...")
+        generate_burst_sample_csv(burst_csv)
         
     # 4. Pre-build PyVis graph visualization if missing
     html_out_path = os.path.join(STATIC_DIR, "fraud_graph.html")

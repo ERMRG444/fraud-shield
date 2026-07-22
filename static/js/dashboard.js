@@ -677,7 +677,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     const waSid = document.getElementById("sim-wa-sid");
                     if (waPanel && actions.whatsapp_alert) {
                         const wa = actions.whatsapp_alert;
-                        waMsg.textContent = wa.message_body;
+                        if (wa.message_body_detail) {
+                            waMsg.textContent = wa.message_body + "\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n" + wa.message_body_detail;
+                        } else {
+                            waMsg.textContent = wa.message_body;
+                        }
                         waTo.textContent = `To: ${wa.to_number}`;
                         waSid.textContent = `SID: ${wa.message_sid.substring(0, 20)}...`;
                         

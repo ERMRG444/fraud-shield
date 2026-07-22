@@ -1,0 +1,12 @@
+sender_id,receiver_id,amount,timestamp,location,device_id
+401,402,100000,2026-06-23 10:00:00,New Delhi,D-Android-01
+402,403,99000,2026-06-23 10:15:00,Gurugram,D-Android-02
+403,404,98000,2026-06-23 10:30:00,Noida,D-Android-03
+404,900,97000,2026-06-23 10:45:00,Delhi,D-Android-04
+411,412,50000,2026-06-23 11:00:00,Mumbai,D-iPhone-01
+412,413,49500,2026-06-23 11:10:00,Thane,D-iPhone-02
+413,900,49000,2026-06-23 11:20:00,Pune,D-iPhone-03
+501,502,1200,2026-06-23 09:15:00,Kolkata,D-Web-05
+502,503,850,2026-06-23 13:40:00,Patna,D-Web-06
+504,505,2200,2026-06-23 14:00:00,Bengaluru,D-Android-08
+505,506,1900,2026-06-23 15:30:00,Mysuru,D-Android-09

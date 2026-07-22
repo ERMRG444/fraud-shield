@@ -6,6 +6,14 @@ Analyzes metadata for spoof indicators and prints rich terminal reports.
 100% local — no Twilio billing, no external API calls.
 """
 
+import sys
+import os
+
+# Add twilio package path (installed to short path to avoid Windows MAX_PATH limit)
+_twilio_pkg_path = r'C:\twilio_pkg'
+if os.path.isdir(_twilio_pkg_path) and _twilio_pkg_path not in sys.path:
+    sys.path.insert(0, _twilio_pkg_path)
+
 import random
 import string
 import uuid
@@ -538,8 +546,19 @@ def generate_whatsapp_alert(metadata, spoof_result, classification):
     scam_type = metadata['scam_label']
     country = metadata['caller_country_name']
 
-    # Build WhatsApp message body
-    message_body = (
+    # 1. Summary WhatsApp alert (matching the screenshot exactly)
+    message_body_summary = (
+        f"🚨 *FRAUD SHIELD – SCAM ALERT* 🚨\n\n"
+        f"Dear *{victim_name}*, an incoming call from *{caller_number}* ({country}) is flagged as "
+        f"*{scam_type} – {risk_score}% risk*.\n\n"
+        f"🛑 *DO NOT answer, share OTP/Aadhaar, or transfer money.*\n"
+        f"No govt agency demands money over phone.\n\n"
+        f"📞 *Report: 1930 | cybercrime.gov.in*\n"
+        f"🔒 *Fraud Shield AI | {datetime.now().strftime('%H:%M:%S IST')}*"
+    )
+
+    # 2. Detailed safety checklist and backup steps
+    message_body_detailed = (
         f"🚨 *FRAUD SHIELD — SCAM CALL ALERT* 🚨\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
         f"Dear *{victim_name}*,\n\n"
@@ -574,10 +593,11 @@ def generate_whatsapp_alert(metadata, spoof_result, classification):
         "from_number": "whatsapp:+14155238886",  # Twilio sandbox
         "to_number": f"whatsapp:{victim_number}",
         "message_sid": f"SM{uuid.uuid4().hex[:32]}",
-        "message_body": message_body,
+        "message_body": message_body_summary,
+        "message_body_detail": message_body_detailed,
         "sent_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "delivery_status": "delivered",
-        "price": "-0.0042",
+        "price": "-0.0084",
         "price_unit": "USD",
     }
 
@@ -586,9 +606,14 @@ def generate_whatsapp_alert(metadata, spoof_result, classification):
 
 def send_real_whatsapp_alert(whatsapp_data):
     """
-    Sends a REAL WhatsApp message via Twilio API using credentials from .env.
+    Sends REAL WhatsApp messages via Twilio API using credentials from .env.
+    Sends both the summary alert and the detailed warning message.
     Returns updated whatsapp_data dict with real delivery status.
     Falls back gracefully if credentials are missing.
+    
+    NOTE: Twilio's HTTP client uses 'requests' which conflicts with eventlet's
+    monkey-patched green threads. We run the actual API calls in a native OS
+    thread via concurrent.futures to avoid greenlet errors.
     """
     try:
         account_sid = os.environ.get('TWILIO_ACCOUNT_SID', '')
@@ -602,28 +627,48 @@ def send_real_whatsapp_alert(whatsapp_data):
             whatsapp_data['real_delivery_note'] = "Credentials not configured in .env"
             return whatsapp_data
 
-        from twilio.rest import Client
-        client = Client(account_sid, auth_token)
+        to_formatted = f"whatsapp:{to_number}" if not to_number.startswith("whatsapp:") else to_number
 
-        # Send the actual WhatsApp message
-        message = client.messages.create(
-            from_=from_number,
-            to=f"whatsapp:{to_number}" if not to_number.startswith("whatsapp:") else to_number,
-            body=whatsapp_data['message_body']
-        )
+        def _send_via_twilio():
+            """Runs in a native OS thread to avoid eventlet/greenlet conflicts."""
+            from twilio.rest import Client
+            client = Client(account_sid, auth_token)
 
-        # Update response with real data
+            # 1. Send the summary WhatsApp message
+            msg_summary = client.messages.create(
+                from_=from_number,
+                to=to_formatted,
+                body=whatsapp_data['message_body']
+            )
+            print(f"  {C.GREEN}[WHATSAPP] summary alert sent: {msg_summary.sid}{C.RESET}")
+
+            # 2. Send the detailed WhatsApp message
+            detail_body = whatsapp_data.get('message_body_detail', '')
+            if detail_body:
+                msg_detail = client.messages.create(
+                    from_=from_number,
+                    to=to_formatted,
+                    body=detail_body
+                )
+                print(f"  {C.GREEN}[WHATSAPP] detailed alert sent: {msg_detail.sid}{C.RESET}")
+
+            return msg_summary
+
+        # Run Twilio calls in a native thread to bypass eventlet green threading
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(_send_via_twilio)
+            message_summary = future.result(timeout=30)  # 30s timeout
+
+        # Update response with real data from summary message
         whatsapp_data['real_delivery'] = True
-        whatsapp_data['message_sid'] = message.sid
-        whatsapp_data['status'] = message.status.upper() if message.status else "QUEUED"
-        whatsapp_data['delivery_status'] = message.status or "queued"
-        whatsapp_data['to_number'] = f"whatsapp:{to_number}" if not to_number.startswith("whatsapp:") else to_number
+        whatsapp_data['message_sid'] = message_summary.sid
+        whatsapp_data['status'] = message_summary.status.upper() if message_summary.status else "QUEUED"
+        whatsapp_data['delivery_status'] = message_summary.status or "queued"
+        whatsapp_data['to_number'] = to_formatted
         whatsapp_data['from_number'] = from_number
 
-        print(f"  {C.GREEN}{C.BOLD}[WHATSAPP] ✓ REAL message sent!{C.RESET}")
-        print(f"  {C.GREEN}  SID: {message.sid}{C.RESET}")
-        print(f"  {C.GREEN}  To:  {to_number}{C.RESET}")
-        print(f"  {C.GREEN}  Status: {message.status}{C.RESET}")
+        print(f"  {C.GREEN}{C.BOLD}[WHATSAPP] ✓ BOTH messages sent successfully!{C.RESET}")
 
         return whatsapp_data
 
